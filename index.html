@@ -1,38 +1,10 @@
 <html>
 <head>
 	<title>target</title>
-	<style type="text/css">
-		div.target {
-			width: 400px;
-			height: 400px;
-			background-color: red;
-			transition: background-color 1s;
-
-		}
-
-		div.target:hover {
-			background-color: blue;
-			transition: background-color 1s;
-		}
-
-	</style>
-
 </head>
 <body>
 	<!-- <div class="target"></div> -->
-	<button id="clearBoardButton">clear board</button>
-	<ul>
-		<li><button data-pieceShape="line">l</button></li>
-		<li><button data-pieceShape="block">square</button></li>
-		<li><button data-pieceShape="s">S</button></li>
-		<li><button data-pieceShape="z">Z</button></li>
-		<li><button data-pieceShape="l">L</button></li>
-		<li><button data-pieceShape="j">J</button></li>
-		<li><button data-pieceShape="t">T</button></li>
-	</ul>
-
 	<canvas id="game-board" width="400" height="400"></canvas>
-
 
 	<script>
 		function flatten (nestedArr) {
@@ -41,7 +13,13 @@
 			});
 		}
 
-		function pieceFactory (shape) {
+		function randomFromArr (arr) {
+			var max = arr.length - 1;
+			var randIndex = Math.round(Math.random() * max);
+			return arr[randIndex];
+		}
+
+		function pieceFactory (shape, color) {
 			var line = {};
 			var block = {};
 			var s = {};
@@ -50,6 +28,7 @@
 			var j = {};
 			var t = {};
 
+			line.color = "orange";
 			line.rotations = [
 				[
 					[0, 0, 0, 1],
@@ -77,6 +56,7 @@
 				],
 			];
 
+			block.color = "red";
 			block.rotations = [
 				[
 					[0, 0, 0, 0],
@@ -104,6 +84,7 @@
 				]
 			];
 
+			s.color = "blue";
 			s.rotations = [
 				[
 					[0, 1, 0, 0],
@@ -131,6 +112,7 @@
 				]
 			];
 
+			z.color = "green";
 			z.rotations = [
 				[
 					[0, 0, 1, 0],
@@ -159,6 +141,7 @@
 
 			];
 
+			l.color = "purple";
 			l.rotations = [
 				[
 					[0, 1, 0, 0],
@@ -187,6 +170,7 @@
 
 			];
 
+			j.color = "lightblue";
 			j.rotations = [
 				[
 					[0, 0, 1, 0],
@@ -215,6 +199,7 @@
 			];
 
 
+			t.color = "orange";
 			t.rotations = [
 				[
 					[0, 0, 1, 0],
@@ -253,7 +238,6 @@
 			};
 
 			var piece = pieces[shape];
-
 			piece.shape = shape;
 
 			piece.currentRotation = 0;
@@ -323,17 +307,43 @@
 			return piece;
 		}
 
+		pieceFactory.allShapes = ['line', 'block', 's', 'z', 'j', 'l', 't'];
+
 		function gameBoardFactory (boardConfig) {
 			var board = {};
 
 			var model = boardModelFactory(boardConfig.rows, boardConfig.cols, boardConfig.squareModelFactory);
 
+			board.getRandomPiece = getRandomPiece;
+			board.getPiece = getPiece;
+
+			board.freezePiece = freezePiece;
 			board.getGrid = getGrid;
 			board.getSquare = getSquare;
 			board.getRow = getRow;
 			board.getCol = getCol;
 			board.pieceCanMove = pieceCanMove;
 			board.pieceCanRotate = pieceCanRotate;
+
+			board.currentPiece = undefined;
+			// should be able to set length of queue
+			board.pieceQueue = [];
+
+			function getRandomPiece () {
+				return getPiece(randomFromArr(gamePieceFactory.allShapes));
+			}
+
+			function getPiece (shape) {
+				return boardConfig.gamePieceFactory(shape);
+			}
+
+			function freezePiece (piece) {
+				piece.getOccuppied().forEach(function (square) {
+					var gameBoardSquare = board.getSquare(square.row, square.col);
+					gameBoardSquare.isOccuppied = true;
+					gameBoardSquare.color = piece.color;
+				});
+			}
 
 			function pieceWouldCollide (piece, rowOffset, colOffset) {
 				var wouldCollide = piece.getOccuppied().some(function (pieceSquare) {
@@ -428,7 +438,7 @@
 			var rowHeight = height / rowsNumber;
 			var colWidth = width / colsNumber;
 
-			view.renderGrid = renderGrid;
+			view.renderBoard = renderBoard;
 			view.renderRow = renderRow;
 			view.renderCol = renderCol;
 			view.renderPiece = renderPiece;
@@ -439,15 +449,6 @@
 				color = color || 'white';
 				context.fillStyle = color;
 				context.fillRect(0, 0, width, height);
-
-				viewConfig.model.getGrid().forEach(function (row, rowNum) {
-					row.forEach(function (square, colNum) {
-						if (square.isOccuppied) {
-							paintSquare(rowNum, colNum, 'black');
-						}
-					});
-				});
-
 				context.fillStyle = cachedFillStyle;
 
 			}
@@ -459,7 +460,13 @@
 				context.fillStyle = cachedFillStyle;
 			}
 
-			function renderGrid (grid) {}
+			function renderBoard () {
+				viewConfig.model.getGrid().forEach(function (row) {
+					row.forEach(function (square) {
+						paintSquare(square.row, square.col, square.color);
+					});
+				});
+			}
 
 			function renderRow (row) {
 				var rowPieces = viewConfig.model.getRow(row);
@@ -483,7 +490,7 @@
 				grid.forEach(function (pieceRow, rowOffset) {
 					pieceRow.forEach(function (boxPresent, colOffset) {
 						if (boxPresent) {
-							paintSquare(row+rowOffset, col+colOffset);
+							paintSquare(row+rowOffset, col+colOffset, piece.color);
 						}
 					});
 				});
@@ -497,7 +504,7 @@
 				row: row,
 				col: col,
 				isOccuppied: false,
-				color: 'red'
+				color: 'white'
 			};
 		}
 
@@ -506,7 +513,9 @@
 		var gameBoard = gameBoardFactory({
 			rows: 20,
 			cols: 20,
-			squareModelFactory: squareModelFactory
+			// nextPieceQueue: 4,
+			squareModelFactory: squareModelFactory,
+			gamePieceFactory: pieceFactory
 		});
 
 		var view = viewFactory({
@@ -514,92 +523,66 @@
 			model: gameBoard
 		});
 
-		// controller code is effed
+		function gameControllerFactory (controllerConfig) {
+			var controller = {};
 
-		var t = pieceFactory('l');
+			controller.start = start;
 
-		view.wipeScreen();
+			function start () {
 
-		view.renderCol(0);
-		view.renderCol(19);
+			}
 
-		view.renderPiece(t);
+			var keyCodeDict = {
+				'37': 'left',
+				'38': 'up',
+				'39': 'right',
+				'40': 'down',
+				'32': 'space'
+			};
 
+			var actionsDict = {
+				'left': moveLeft,
+				'up': rotatePiece,
+				'right': moveRight,
+				'down': moveDown,
+				'space': hardDrop
+			};
 
-		document.getElementById('clearBoardButton').addEventListener('click', function () {
-			view.wipeScreen();
+			function handleKeyDown (key) {
+				if (keyCodeDict[key.keyCode]) {
+					key.preventDefault();
+					// is binding to the controller necessary?
+					actionsDict[keyCodeDict[key.keyCode]].call(controller);
+				}
+			}
+
+			function moveLeft () {
+				console.log('moveLeft called');
+			}
+			function rotatePiece () {
+				console.log('rotatePiece called');
+			}
+			function moveRight () {
+				console.log('moveRight called');
+			}
+			function moveDown () {
+				console.log('moveDown called');
+			}
+			function hardDrop () {
+				console.log('hardDrop called');
+			}
+
+			document.body.addEventListener('keydown', handleKeyDown);
+
+			return controller;
+		}
+
+		var controller = gameControllerFactory({
+			view: view,
+			model: gameBoard
 		});
 
-		[].slice.call(document.getElementsByTagName('ul')[0].children).forEach(function (li) {
-			li.children[0].addEventListener('click', function () {
-				t = pieceFactory(this.getAttribute('data-pieceShape'));
-				view.wipeScreen();
-				view.renderCol(0);
-				view.renderCol(19);
-				view.renderPiece(t);
-			});
-		});
-
-		document.body.addEventListener('keydown', function (k) {
-			if (k.keyCode === 38 || k.keyCode === 40) {
-				k.preventDefault();
-			}
-
-			if (k.keyCode === 38) {
-				if (gameBoard.pieceCanRotate(t)) {
-					t.rotate();
-				}
-
-				view.wipeScreen();
-
-				view.renderCol(0);
-				view.renderCol(19);
-
-				view.renderPiece(t);
-			}
-
-			if (k.keyCode === 40) {
-				if (gameBoard.pieceCanMove(t, 1, 0)) {
-					t.lower();
-				}
-
-				view.wipeScreen();
-
-				view.renderCol(0);
-				view.renderCol(19);
-
-				view.renderPiece(t);
-			}
-
-			if (k.keyCode === 37) {
-				if (gameBoard.pieceCanMove(t, 0, -1)) {
-					t.shift(-1);
-				}
-
-				view.wipeScreen();
-
-				view.renderCol(0);
-				view.renderCol(19);
-
-				view.renderPiece(t);
-			}
-
-			if (k.keyCode === 39) {
-				if (gameBoard.pieceCanMove(t, 0, 1)) {
-					t.shift(1);
-				}
-
-				view.wipeScreen();
-
-				view.renderCol(0);
-				view.renderCol(19);
-
-				view.renderPiece(t);
-			}
-
-		});
-
-
+		controller.start();
 
 	</script>
 
