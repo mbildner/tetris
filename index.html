@@ -4,7 +4,7 @@
 </head>
 <body>
 	<!-- <div class="target"></div> -->
-	<canvas id="game-board" width="400" height="400"></canvas>
+	<canvas id="game-board" width="1000" height="1000"></canvas>
 
 	<script>
 		function flatten (nestedArr) {
@@ -325,12 +325,11 @@
 			board.pieceCanMove = pieceCanMove;
 			board.pieceCanRotate = pieceCanRotate;
 
-			board.currentPiece = undefined;
-			// should be able to set length of queue
-			board.pieceQueue = [];
+			board.currentPiece = board.getRandomPiece();
 
 			function getRandomPiece () {
-				return getPiece(randomFromArr(gamePieceFactory.allShapes));
+				var randomShape = randomFromArr(boardConfig.gamePieceFactory.allShapes);
+				return getPiece(randomShape);
 			}
 
 			function getPiece (shape) {
@@ -370,13 +369,6 @@
 			function pieceCanMove (piece, row, col) {
 				var wouldCollide = pieceWouldCollide(piece, row, col);
 				var wouldBeOffBoard = isOffBoard(piece, row, col);
-
-				if (wouldCollide || wouldBeOffBoard) {
-					console.log("NO: ", wouldCollide, wouldBeOffBoard);
-				}
-				else {
-					console.log('piece can move');
-				}
 
 				return (!wouldCollide && !wouldBeOffBoard);
 			}
@@ -510,9 +502,14 @@
 
 		var canvas = document.getElementById('game-board');
 
+		canvas.height = window.screen.height * .8;
+		canvas.width = canvas.height * .9;
+
+
+
 		var gameBoard = gameBoardFactory({
-			rows: 20,
-			cols: 20,
+			rows: 50,
+			cols: 50,
 			// nextPieceQueue: 4,
 			squareModelFactory: squareModelFactory,
 			gamePieceFactory: pieceFactory
@@ -528,7 +525,33 @@
 
 			controller.start = start;
 
+			var cyclesBlocked = 0;
+
+			function runRender () {
+				controllerConfig.view.wipeScreen();
+				controllerConfig.view.renderBoard();
+				controllerConfig.view.renderPiece(controllerConfig.model.currentPiece);
+				window.requestAnimationFrame(runRender);
+			}
+
 			function start () {
+				document.body.addEventListener('keydown', handleKeyDown);
+				runRender();
+
+				// this logic should be moved to gameModel
+				window.setInterval(function () {
+					if (!moveDown()) {
+						cyclesBlocked += 1;
+					}
+					if (cyclesBlocked >= controllerConfig.freezePieceAfter) {
+
+						controllerConfig.model.freezePiece(controllerConfig.model.currentPiece);
+						cyclesBlocked = 0;
+						controllerConfig.model.currentPiece = controllerConfig.model.getRandomPiece();
+					}
+
+				}, 500);
+
 
 			}
 
@@ -557,29 +580,50 @@
 			}
 
 			function moveLeft () {
-				console.log('moveLeft called');
-			}
-			function rotatePiece () {
-				console.log('rotatePiece called');
-			}
-			function moveRight () {
-				console.log('moveRight called');
-			}
-			function moveDown () {
-				console.log('moveDown called');
-			}
-			function hardDrop () {
-				console.log('hardDrop called');
+				if (controllerConfig.model.pieceCanMove(controllerConfig.model.currentPiece, 0, -1)) {
+					controllerConfig.model.currentPiece.shift(-1);
+				}
 			}
 
-			document.body.addEventListener('keydown', handleKeyDown);
+			function moveRight () {
+				if (controllerConfig.model.pieceCanMove(controllerConfig.model.currentPiece, 0, 1)) {
+					controllerConfig.model.currentPiece.shift(1);
+				}
+			}
+
+			function rotatePiece () {
+				if (controllerConfig.model.pieceCanRotate(controllerConfig.model.currentPiece)) {
+					controllerConfig.model.currentPiece.rotate();
+				}
+			}
+
+			function moveDown () {
+				var ableToMove = controllerConfig.model.pieceCanMove(controllerConfig.model.currentPiece, 1, 0);
+
+				if (ableToMove) {
+					controllerConfig.model.currentPiece.lower();
+				}
+
+				return ableToMove;
+			}
+
+			function hardDrop () {
+				while (moveDown()) {
+					// drop until can't
+				}
+
+				controllerConfig.model.freezePiece(controllerConfig.model.currentPiece);
+				cyclesBlocked = 0;
+				controllerConfig.model.currentPiece = controllerConfig.model.getRandomPiece();
+			}
 
 			return controller;
 		}
 
 		var controller = gameControllerFactory({
 			view: view,
-			model: gameBoard
+			model: gameBoard,
+			freezePieceAfter: 2
 		});
 
 		controller.start();
