@@ -353,10 +353,8 @@
 			}
 
 			function pieceCanRotate (piece) {
-				var safeToRotate = pieceCanMove(piece.getSingleRotation(), piece.coords.row, piece.coords.col);
-
+				var safeToRotate = pieceCanMove(piece.getSingleRotation(), 0, 0);
 				return safeToRotate;
-
 			}
 
 			function pieceCanMove (piece, row, col) {
