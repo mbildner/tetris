@@ -1,0 +1,572 @@
+<html>
+<head>
+	<title>target</title>
+	<style type="text/css">
+		div.target {
+			width: 400px;
+			height: 400px;
+			background-color: red;
+			transition: background-color 1s;
+
+		}
+
+		div.target:hover {
+			background-color: blue;
+			transition: background-color 1s;
+		}
+
+	</style>
+
+</head>
+<body>
+	<!-- <div class="target"></div> -->
+	<button id="clearBoardButton">clear board</button>
+	<ul>
+		<li><button data-pieceShape="line">l</button></li>
+		<li><button data-pieceShape="block">square</button></li>
+		<li><button data-pieceShape="s">S</button></li>
+		<li><button data-pieceShape="z">Z</button></li>
+		<li><button data-pieceShape="l">L</button></li>
+		<li><button data-pieceShape="j">J</button></li>
+		<li><button data-pieceShape="t">T</button></li>
+	</ul>
+
+	<canvas id="game-board" width="400" height="800"></canvas>
+
+
+	<script>
+		function flatten (nestedArr) {
+			return nestedArr.reduce(function (flatArr, arr) {
+				return flatArr.concat(arr);
+			});
+		}
+
+		function pieceFactory (shape) {
+			var line = {};
+			var block = {};
+			var s = {};
+			var z = {};
+			var l = {};
+			var j = {};
+			var t = {};
+
+			line.rotations = [
+				[
+					[0, 0, 0, 1],
+					[0, 0, 0, 1],
+					[0, 0, 0, 1],
+					[0, 0, 0, 1]
+				],
+				[
+					[0, 0, 0, 0],
+					[0, 0, 0, 0],
+					[1, 1, 1, 1],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 0, 1],
+					[0, 0, 0, 1],
+					[0, 0, 0, 1],
+					[0, 0, 0, 1]
+				],
+				[
+					[0, 0, 0, 0],
+					[0, 0, 0, 0],
+					[1, 1, 1, 1],
+					[0, 0, 0, 0]
+				],
+			];
+
+			block.rotations = [
+				[
+					[0, 0, 0, 0],
+					[0, 1, 1, 0],
+					[0, 1, 1, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 0, 0],
+					[0, 1, 1, 0],
+					[0, 1, 1, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 0, 0],
+					[0, 1, 1, 0],
+					[0, 1, 1, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 0, 0],
+					[0, 1, 1, 0],
+					[0, 1, 1, 0],
+					[0, 0, 0, 0]
+				]
+			];
+
+			s.rotations = [
+				[
+					[0, 1, 0, 0],
+					[0, 1, 1, 0],
+					[0, 0, 1, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 0, 0],
+					[0, 1, 1, 0],
+					[1, 1, 0, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 1, 0, 0],
+					[0, 1, 1, 0],
+					[0, 0, 1, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 0, 0],
+					[0, 1, 1, 0],
+					[1, 1, 0, 0],
+					[0, 0, 0, 0]
+				]
+			];
+
+			z.rotations = [
+				[
+					[0, 0, 1, 0],
+					[0, 1, 1, 0],
+					[0, 1, 0, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 0, 0],
+					[1, 1, 0, 0],
+					[0, 1, 1, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 1, 0],
+					[0, 1, 1, 0],
+					[0, 1, 0, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 0, 0],
+					[1, 1, 0, 0],
+					[0, 1, 1, 0],
+					[0, 0, 0, 0]
+				]
+
+			];
+
+			l.rotations = [
+				[
+					[0, 1, 0, 0],
+					[0, 1, 0, 0],
+					[0, 1, 1, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 0, 0],
+					[0, 1, 1, 1],
+					[0, 1, 0, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 1, 1, 0],
+					[0, 0, 1, 0],
+					[0, 0, 1, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 0, 0],
+					[0, 0, 1, 0],
+					[1, 1, 1, 0],
+					[0, 0, 0, 0]
+				]
+
+			];
+
+			j.rotations = [
+				[
+					[0, 0, 1, 0],
+					[0, 0, 1, 0],
+					[0, 1, 1, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 0, 0],
+					[0, 1, 0, 0],
+					[0, 1, 1, 1],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 1, 1, 0],
+					[0, 1, 0, 0],
+					[0, 1, 0, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 0, 0],
+					[1, 1, 1, 0],
+					[0, 0, 1, 0],
+					[0, 0, 0, 0]
+				]
+			];
+
+
+			t.rotations = [
+				[
+					[0, 0, 1, 0],
+					[0, 1, 1, 1],
+					[0, 0, 0, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 1, 0],
+					[0, 0, 1, 1],
+					[0, 0, 1, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 1, 0],
+					[0, 1, 1, 0],
+					[0, 0, 1, 0],
+					[0, 0, 0, 0]
+				],
+				[
+					[0, 0, 1, 0],
+					[0, 1, 1, 1],
+					[0, 0, 0, 0],
+					[0, 0, 0, 0]
+				]
+			];
+
+			var pieces = {
+				line: line,
+				block: block,
+				s: s,
+				z: z,
+				l: l,
+				j: j,
+				t: t
+			};
+
+			var piece = pieces[shape];
+
+			piece.currentRotation = 0;
+
+			piece.rotate = function () {
+				this.currentRotation = (this.currentRotation + 1) % 4;
+				return this.currentRotation;
+			};
+
+			piece.getGrid = function () {
+				return this.rotations[this.currentRotation];
+			};
+
+			piece.getOccuppied = function () {
+				var corner = this.coords;
+				var grid = this.getGrid();
+
+				var nestedObjectGrid = grid.map(function (row, rowOffset) {
+					return row.map(function (box, colOffset) {
+						return {
+							isOccuppied: box,
+							row: corner.row + rowOffset,
+							col: corner.col + colOffset
+						};
+					});
+				});
+
+				var objectArr = flatten(nestedObjectGrid);
+
+				var occuppiedObjectArr = objectArr.filter(function (square) {
+					return square.isOccuppied;
+				});
+
+				return occuppiedObjectArr;
+
+			};
+
+			piece.coords = {
+				row: 0,
+				col: 0
+			};
+
+			piece.lower = function () {
+				this.coords.row += 1;
+				return this.coords.row;
+			};
+
+			piece.shift = function (direction) {
+				this.coords.col += direction;
+				return this.coords.col;
+			};
+
+			return piece;
+		}
+
+		function gameBoardFactory (boardConfig) {
+			var board = {};
+
+			var model = boardModelFactory(boardConfig.rows, boardConfig.cols, boardConfig.squareModelFactory);
+
+			board.getGrid = getGrid;
+			board.getSquare = getSquare;
+			board.getRow = getRow;
+			board.getCol = getCol;
+			board.pieceCanMove = pieceCanMove;
+
+			function pieceWouldCollide (piece, row, col) {
+				var wouldCollide = piece.getOccuppied().some(function (pieceSquare) {
+					return getSquare(pieceSquare.row, pieceSquare.col).isOccuppied;
+				});
+
+				return wouldCollide;
+			}
+
+			function isOffBoard (piece, row, col) {
+
+			}
+
+			function pieceCanMove (piece, row, col) {
+				var wouldCollide = pieceWouldCollide(piece, row, col);
+
+				if (wouldCollide) {
+					console.log('piece CAN NOT move');
+				}
+				else {
+					console.log('piece can move');
+				}
+
+				return !wouldCollide;
+			}
+
+			function getGrid () {
+				return model;
+			}
+
+			function getCol (col) {
+				return model.map(function (row) {
+					return row[col];
+				});
+			}
+
+			function getRow (row) {
+				return model[row];
+			}
+
+			function getSquare (row, col) {
+				return model[row][col];
+			}
+
+			function boardModelFactory (rows, cols, squareModelFactory) {
+				squareModelFactory = (squareModelFactory || function () {return {}});
+
+				var model = [];
+				for (var r=0; r<rows; r++) {
+					var row = [];
+					for (var c=0; c<cols; c++) {
+						var square = squareModelFactory(r, c);
+						row.push(square);
+					}
+					model.push(row);
+				}
+
+				return model;
+			}
+
+			return board;
+		}
+
+		function viewFactory (viewConfig) {
+			var view = {};
+
+			var canvas = viewConfig.canvas;
+			var context = canvas.getContext('2d');
+
+			var height = canvas.height;
+			var width = canvas.width;
+
+			var rowsNumber = viewConfig.model.getRow(0).length;
+			var colsNumber = viewConfig.model.getCol(0).length;
+
+			var rowHeight = height / rowsNumber;
+			var colWidth = width / colsNumber;
+
+			view.renderGrid = renderGrid;
+			view.renderRow = renderRow;
+			view.renderCol = renderCol;
+			view.renderPiece = renderPiece;
+			view.wipeScreen = wipeScreen;
+
+			function wipeScreen (color) {
+				var cachedFillStyle = context.fillStyle;
+				color = color || 'white';
+				context.fillStyle = color;
+				context.fillRect(0, 0, width, height);
+
+				viewConfig.model.getGrid().forEach(function (row, rowNum) {
+					row.forEach(function (square, colNum) {
+						if (square.isOccuppied) {
+							paintSquare(rowNum, colNum, 'black');
+						}
+					});
+				});
+
+				context.fillStyle = cachedFillStyle;
+
+			}
+
+			function paintSquare (row, col, color) {
+				var cachedFillStyle = context.fillStyle;
+				context.fillStyle = color;
+				context.fillRect(col*colWidth, row*rowHeight, colWidth, rowHeight);
+				context.fillStyle = cachedFillStyle;
+			}
+
+			function renderGrid (grid) {}
+
+			function renderRow (row) {
+				var rowPieces = viewConfig.model.getRow(row);
+				rowPieces.forEach(function (box) {
+					paintSquare(box.row, box.col, box.color);
+				});
+			}
+
+			function renderCol (col) {
+				var colPieces = viewConfig.model.getCol(col);
+				colPieces.forEach(function (box) {
+					paintSquare(box.row, box.col, box.color);
+				});
+			}
+
+			function renderPiece (piece) {
+				var row = piece.coords.row;
+				var col = piece.coords.col;
+				var grid = piece.getGrid();
+
+				grid.forEach(function (pieceRow, rowOffset) {
+					pieceRow.forEach(function (boxPresent, colOffset) {
+						if (boxPresent) {
+							paintSquare(row+rowOffset, col+colOffset);
+						}
+					});
+				});
+			}
+
+			return view;
+		}
+
+		function squareModelFactory (row, col) {
+			return {
+				row: row,
+				col: col,
+				isOccuppied: false,
+				color: 'red'
+			};
+		}
+
+		var canvas = document.getElementById('game-board');
+
+		var gameBoard = gameBoardFactory({
+			rows: 20,
+			cols: 20,
+			squareModelFactory: squareModelFactory
+		});
+
+		var view = viewFactory({
+			canvas: canvas,
+			model: gameBoard
+		});
+
+		var t = pieceFactory('l');
+
+		view.wipeScreen();
+
+		view.renderCol(0);
+		view.renderCol(19);
+
+		view.renderPiece(t);
+
+
+		document.getElementById('clearBoardButton').addEventListener('click', function () {
+			view.wipeScreen();
+		});
+
+		[].slice.call(document.getElementsByTagName('ul')[0].children).forEach(function (li) {
+			li.children[0].addEventListener('click', function () {
+				t = pieceFactory(this.getAttribute('data-pieceShape'));
+				view.wipeScreen();
+				view.renderCol(0);
+				view.renderCol(19);
+				view.renderPiece(t);
+			});
+		});
+
+		document.body.addEventListener('keydown', function (k) {
+			if (k.keyCode === 38 || k.keyCode === 40) {
+				k.preventDefault();
+			}
+
+			if (k.keyCode === 38) {
+				t.rotate();
+				view.wipeScreen();
+
+				view.renderCol(0);
+				view.renderCol(19);
+
+				view.renderPiece(t);
+			}
+
+			if (k.keyCode === 40) {
+				if (gameBoard.pieceCanMove(t, 1, 0)) {
+					t.lower();
+				}
+
+				view.wipeScreen();
+
+				view.renderCol(0);
+				view.renderCol(19);
+
+				view.renderPiece(t);
+			}
+
+			if (k.keyCode === 37) {
+				if (gameBoard.pieceCanMove(t, 0, -1)) {
+					t.shift(-1);
+				}
+
+				view.wipeScreen();
+
+				view.renderCol(0);
+				view.renderCol(19);
+
+				view.renderPiece(t);
+			}
+
+			if (k.keyCode === 39) {
+				if (gameBoard.pieceCanMove(t, 0, 1)) {
+					t.shift(1);
+				}
+
+				view.wipeScreen();
+
+				view.renderCol(0);
+				view.renderCol(19);
+
+				view.renderPiece(t);
+			}
+
+		});
+
+
+
+	</script>
+
+
+
+
+</body>
+</html>
