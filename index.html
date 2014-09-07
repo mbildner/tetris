@@ -31,7 +31,7 @@
 		<li><button data-pieceShape="t">T</button></li>
 	</ul>
 
-	<canvas id="game-board" width="400" height="800"></canvas>
+	<canvas id="game-board" width="400" height="400"></canvas>
 
 
 	<script>
@@ -229,15 +229,15 @@
 					[0, 0, 0, 0]
 				],
 				[
-					[0, 0, 1, 0],
-					[0, 1, 1, 0],
+					[0, 0, 0, 0],
+					[0, 1, 1, 1],
 					[0, 0, 1, 0],
 					[0, 0, 0, 0]
 				],
 				[
 					[0, 0, 1, 0],
-					[0, 1, 1, 1],
-					[0, 0, 0, 0],
+					[0, 1, 1, 0],
+					[0, 0, 1, 0],
 					[0, 0, 0, 0]
 				]
 			];
@@ -254,11 +254,27 @@
 
 			var piece = pieces[shape];
 
+			piece.shape = shape;
+
 			piece.currentRotation = 0;
 
 			piece.rotate = function () {
 				this.currentRotation = (this.currentRotation + 1) % 4;
 				return this.currentRotation;
+			};
+
+			piece.getRotations = function (times) {
+				// this is bad
+				var dummyPiece = pieceFactory(this.shape);
+				dummyPiece.coords = this.coords;
+				dummyPiece.currentRotation = this.currentRotation;
+				dummyPiece.rotate();
+				return dummyPiece;
+
+			};
+
+			piece.getSingleRotation = function () {
+				return this.getRotations(1);
 			};
 
 			piece.getGrid = function () {
@@ -317,30 +333,44 @@
 			board.getRow = getRow;
 			board.getCol = getCol;
 			board.pieceCanMove = pieceCanMove;
+			board.pieceCanRotate = pieceCanRotate;
 
-			function pieceWouldCollide (piece, row, col) {
+			function pieceWouldCollide (piece, rowOffset, colOffset) {
 				var wouldCollide = piece.getOccuppied().some(function (pieceSquare) {
-					return getSquare(pieceSquare.row, pieceSquare.col).isOccuppied;
+					var gridSquare = getSquare(pieceSquare.row + rowOffset, pieceSquare.col + colOffset);
+					return gridSquare && gridSquare.isOccuppied;
 				});
 
 				return wouldCollide;
 			}
 
-			function isOffBoard (piece, row, col) {
+			function isOffBoard (piece, rowOffset, colOffset) {
+				var offBoard = piece.getOccuppied().some(function (pieceSquare) {
+					return !getSquare(pieceSquare.row + rowOffset, pieceSquare.col + colOffset);
+				});
+
+				return offBoard;
+			}
+
+			function pieceCanRotate (piece) {
+				var safeToRotate = pieceCanMove(piece.getSingleRotation(), piece.coords.row, piece.coords.col);
+
+				return safeToRotate;
 
 			}
 
 			function pieceCanMove (piece, row, col) {
 				var wouldCollide = pieceWouldCollide(piece, row, col);
+				var wouldBeOffBoard = isOffBoard(piece, row, col);
 
-				if (wouldCollide) {
-					console.log('piece CAN NOT move');
+				if (wouldCollide || wouldBeOffBoard) {
+					console.log("NO: ", wouldCollide, wouldBeOffBoard);
 				}
 				else {
 					console.log('piece can move');
 				}
 
-				return !wouldCollide;
+				return (!wouldCollide && !wouldBeOffBoard);
 			}
 
 			function getGrid () {
@@ -358,7 +388,12 @@
 			}
 
 			function getSquare (row, col) {
-				return model[row][col];
+				if (row >= boardConfig.rows || col >= boardConfig.cols) {
+					return undefined
+				}
+				else {
+					return model[row][col];
+				}
 			}
 
 			function boardModelFactory (rows, cols, squareModelFactory) {
@@ -481,6 +516,8 @@
 			model: gameBoard
 		});
 
+		// controller code is effed
+
 		var t = pieceFactory('l');
 
 		view.wipeScreen();
@@ -511,7 +548,10 @@
 			}
 
 			if (k.keyCode === 38) {
-				t.rotate();
+				if (gameBoard.pieceCanRotate(t)) {
+					t.rotate();
+				}
+
 				view.wipeScreen();
 
 				view.renderCol(0);
