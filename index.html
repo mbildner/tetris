@@ -4,7 +4,7 @@
 </head>
 <body>
 	<!-- <div class="target"></div> -->
-	<canvas id="game-board" width="1000" height="1000"></canvas>
+	<canvas id="game-board" width="300" height="300"></canvas>
 
 	<script>
 		function flatten (nestedArr) {
@@ -438,7 +438,7 @@
 
 			function wipeScreen (color) {
 				var cachedFillStyle = context.fillStyle;
-				color = color || 'white';
+				color = color || 'grey';
 				context.fillStyle = color;
 				context.fillRect(0, 0, width, height);
 				context.fillStyle = cachedFillStyle;
@@ -496,20 +496,15 @@
 				row: row,
 				col: col,
 				isOccuppied: false,
-				color: 'white'
+				color: 'grey'
 			};
 		}
 
 		var canvas = document.getElementById('game-board');
 
-		canvas.height = window.screen.height * .8;
-		canvas.width = canvas.height * .9;
-
-
-
 		var gameBoard = gameBoardFactory({
-			rows: 50,
-			cols: 50,
+			rows: 20,
+			cols: 20,
 			// nextPieceQueue: 4,
 			squareModelFactory: squareModelFactory,
 			gamePieceFactory: pieceFactory
