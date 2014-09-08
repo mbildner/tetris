@@ -4,7 +4,7 @@
 </head>
 <body>
 	<!-- <div class="target"></div> -->
-	<canvas id="game-board" width="300" height="300"></canvas>
+	<canvas id="game-board" width="300" height="600"></canvas>
 
 	<script>
 		function flatten (nestedArr) {
@@ -312,6 +312,9 @@
 		function gameBoardFactory (boardConfig) {
 			var board = {};
 
+			board.rows = boardConfig.rows;
+			board.cols = boardConfig.cols;
+
 			var model = boardModelFactory(boardConfig.rows, boardConfig.cols, boardConfig.squareModelFactory);
 
 			board.getRandomPiece = getRandomPiece;
@@ -424,8 +427,9 @@
 			var height = canvas.height;
 			var width = canvas.width;
 
-			var rowsNumber = viewConfig.model.getRow(0).length;
-			var colsNumber = viewConfig.model.getCol(0).length;
+			var rowsNumber = viewConfig.model.rows;
+
+			var colsNumber = viewConfig.model.cols;
 
 			var rowHeight = height / rowsNumber;
 			var colWidth = width / colsNumber;
@@ -499,21 +503,6 @@
 				color: 'grey'
 			};
 		}
-
-		var canvas = document.getElementById('game-board');
-
-		var gameBoard = gameBoardFactory({
-			rows: 20,
-			cols: 20,
-			// nextPieceQueue: 4,
-			squareModelFactory: squareModelFactory,
-			gamePieceFactory: pieceFactory
-		});
-
-		var view = viewFactory({
-			canvas: canvas,
-			model: gameBoard
-		});
 
 		function gameControllerFactory (controllerConfig) {
 			var controller = {};
@@ -614,6 +603,21 @@
 
 			return controller;
 		}
+
+		var canvas = document.getElementById('game-board');
+
+		var gameBoard = gameBoardFactory({
+			rows: 20,
+			cols: 10,
+			// nextPieceQueue: 4,
+			squareModelFactory: squareModelFactory,
+			gamePieceFactory: pieceFactory
+		});
+
+		var view = viewFactory({
+			canvas: canvas,
+			model: gameBoard
+		});
 
 		var controller = gameControllerFactory({
 			view: view,
