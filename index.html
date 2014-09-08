@@ -4,7 +4,7 @@
 </head>
 <body>
 	<!-- <div class="target"></div> -->
-	<canvas id="game-board" width="1000" height="1000"></canvas>
+	<canvas id="game-board" width="500" height="500"></canvas>
 
 	<script>
 		function flatten (nestedArr) {
@@ -19,7 +19,7 @@
 			return arr[randIndex];
 		}
 
-		function pieceFactory (shape, color) {
+		function pieceFactory (shape, startingCoords) {
 			var line = {};
 			var block = {};
 			var s = {};
@@ -289,10 +289,7 @@
 
 			};
 
-			piece.coords = {
-				row: 0,
-				col: 0
-			};
+			piece.coords = startingCoords;
 
 			piece.lower = function () {
 				this.coords.row += 1;
@@ -312,10 +309,15 @@
 		function gameBoardFactory (boardConfig) {
 			var board = {};
 
+			// refactor so boardModelFactory wraps rowFactory so removeRow can use it to instantiate new rows after popping
+			// right now use hack, create new model with 1 row
 			var model = boardModelFactory(boardConfig.rows, boardConfig.cols, boardConfig.squareModelFactory);
 
 			board.getRandomPiece = getRandomPiece;
 			board.getPiece = getPiece;
+
+			board.getFullRows = getFullRows;
+			board.removeRow = removeRow;
 
 			board.freezePiece = freezePiece;
 			board.getGrid = getGrid;
@@ -327,13 +329,38 @@
 
 			board.currentPiece = board.getRandomPiece();
 
+			function removeRow (rowNumber) {
+				model = model.filter(function (row, rowIndex) {
+					return rowIndex !== rowNumber;
+				});
+
+				var newRow = boardModelFactory(1, boardConfig.cols, boardConfig.squareModelFactory);
+				model.push(newRow);
+				debugger
+			}
+
+			function getFullRows () {
+				var fullRows = [];
+
+				// don't use filter to mutate state, change this
+				model.filter(function (row, rowIndx) {
+					if (row.every(function (square) {
+						return square.isOccuppied;
+					})) {
+						fullRows.push(rowIndx);
+					}
+				});
+
+				return fullRows;
+			}
+
 			function getRandomPiece () {
 				var randomShape = randomFromArr(boardConfig.gamePieceFactory.allShapes);
 				return getPiece(randomShape);
 			}
 
 			function getPiece (shape) {
-				return boardConfig.gamePieceFactory(shape);
+				return boardConfig.gamePieceFactory(shape, {row: 0, col: Math.round((boardConfig.cols / 2) - 3)});
 			}
 
 			function freezePiece (piece) {
@@ -438,7 +465,7 @@
 
 			function wipeScreen (color) {
 				var cachedFillStyle = context.fillStyle;
-				color = color || 'white';
+				color = color || 'grey';
 				context.fillStyle = color;
 				context.fillRect(0, 0, width, height);
 				context.fillStyle = cachedFillStyle;
@@ -496,20 +523,16 @@
 				row: row,
 				col: col,
 				isOccuppied: false,
-				color: 'white'
+				color: 'grey'
 			};
 		}
 
 		var canvas = document.getElementById('game-board');
 
-		canvas.height = window.screen.height * .8;
-		canvas.width = canvas.height * .9;
-
-
-
 		var gameBoard = gameBoardFactory({
-			rows: 50,
-			cols: 50,
+			// something is wrong with cols setting and board rendering
+			rows: 10,
+			cols: 10,
 			// nextPieceQueue: 4,
 			squareModelFactory: squareModelFactory,
 			gamePieceFactory: pieceFactory
@@ -528,15 +551,15 @@
 			var cyclesBlocked = 0;
 
 			function runRender () {
+
 				controllerConfig.view.wipeScreen();
 				controllerConfig.view.renderBoard();
 				controllerConfig.view.renderPiece(controllerConfig.model.currentPiece);
-				window.requestAnimationFrame(runRender);
+
 			}
 
 			function start () {
 				document.body.addEventListener('keydown', handleKeyDown);
-				runRender();
 
 				// this logic should be moved to gameModel
 				window.setInterval(function () {
@@ -548,9 +571,17 @@
 						controllerConfig.model.freezePiece(controllerConfig.model.currentPiece);
 						cyclesBlocked = 0;
 						controllerConfig.model.currentPiece = controllerConfig.model.getRandomPiece();
+
+						var fullRows = controllerConfig.model.getFullRows();
+						if (fullRows) {
+							fullRows.forEach(controllerConfig.model.removeRow);
+						}
+
 					}
 
-				}, 500);
+					runRender();
+
+				}, 200);
 
 
 			}
@@ -576,6 +607,7 @@
 					key.preventDefault();
 					// is binding to the controller necessary?
 					actionsDict[keyCodeDict[key.keyCode]].call(controller);
+					runRender();
 				}
 			}
 
@@ -604,6 +636,11 @@
 					controllerConfig.model.currentPiece.lower();
 				}
 
+				var fullRows = controllerConfig.model.getFullRows();
+				if (fullRows) {
+					fullRows.forEach(controllerConfig.model.removeRow);
+				}
+
 				return ableToMove;
 			}
 
@@ -615,7 +652,14 @@
 				controllerConfig.model.freezePiece(controllerConfig.model.currentPiece);
 				cyclesBlocked = 0;
 				controllerConfig.model.currentPiece = controllerConfig.model.getRandomPiece();
+
+				var fullRows = controllerConfig.model.getFullRows();
+				if (fullRows) {
+					fullRows.forEach(controllerConfig.model.removeRow);
+				}
+
 			}
+
 
 			return controller;
 		}
