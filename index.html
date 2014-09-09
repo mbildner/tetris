@@ -309,7 +309,7 @@
 
 		pieceFactory.allShapes = ['line', 'block', 's', 'z', 'j', 'l', 't'];
 
-		function gameBoardFactory (boardConfig) {
+		function gameModelFactory (boardConfig) {
 			var board = {};
 
 			board.rows = boardConfig.rows;
@@ -651,7 +651,7 @@
 
 		var canvas = document.getElementById('game-board');
 
-		var gameBoard = gameBoardFactory({
+		var gameModel = gameModelFactory({
 			rows: 20,
 			cols: 10,
 			// nextPieceQueue: 4,
@@ -659,14 +659,14 @@
 			gamePieceFactory: pieceFactory
 		});
 
-		var view = viewFactory({
+		var gameView = viewFactory({
 			canvas: canvas,
-			model: gameBoard
+			model: gameModel
 		});
 
 		var controller = gameControllerFactory({
-			view: view,
-			model: gameBoard,
+			view: gameView,
+			model: gameModel,
 			freezePieceAfter: 2
 		});
 
