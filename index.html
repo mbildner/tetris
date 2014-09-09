@@ -334,7 +334,17 @@
 
 			board.currentPiece = board.getRandomPiece();
 
-			board.currentPieceShadow = function () {return board.currentPiece};
+			board.currentPieceShadow = function () {
+				// refactor needs own function
+				var clone = {};
+				Object.keys(board.currentPiece).forEach(function (key) {
+					clone[key] = board.currentPiece[key];
+				});
+
+				clone.color = 'lime';
+
+				return clone;
+			};
 
 			function clearRow (rowIndx) {
 				var fullRow = model.splice(rowIndx, 1)[0];
@@ -556,7 +566,7 @@
 
 				// this logic should be moved to gameModel
 				window.setInterval(function () {
-					if (!moveDown()) {
+					if (!moveDown(controllerConfig.model.currentPiece)) {
 						cyclesBlocked += 1;
 					}
 					if (cyclesBlocked >= controllerConfig.freezePieceAfter) {
@@ -611,27 +621,43 @@
 			function moveRight () {
 				if (controllerConfig.model.pieceCanMove(controllerConfig.model.currentPiece, 0, 1)) {
 					controllerConfig.model.currentPiece.shift(1);
+
+					dropShadowPiece();
+
 				}
 			}
 
 			function rotatePiece () {
 				if (controllerConfig.model.pieceCanRotate(controllerConfig.model.currentPiece)) {
 					controllerConfig.model.currentPiece.rotate();
+
+					dropShadowPiece();
+
 				}
 			}
 
+			function dropShadowPiece () {
+				var shadowPiece = controllerConfig.model.currentPieceShadow();
+				while (moveDown(shadowPiece)) {
+					// drop shadowpiece until can't
+				}
+
+
+
+			}
+
 			function moveDown (piece) {
-				var ableToMove = controllerConfig.model.pieceCanMove(controllerConfig.model.currentPiece, 1, 0);
+				var ableToMove = controllerConfig.model.pieceCanMove(piece, 1, 0);
 
 				if (ableToMove) {
-					controllerConfig.model.currentPiece.lower();
+					piece.lower();
 				}
 
 				return ableToMove;
 			}
 
 			function hardDrop () {
-				while (moveDown()) {
+				while (moveDown(controllerConfig.model.currentPiece)) {
 					// drop until can't
 				}
 
