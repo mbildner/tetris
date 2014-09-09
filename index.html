@@ -320,6 +320,10 @@
 			board.getRandomPiece = getRandomPiece;
 			board.getPiece = getPiece;
 
+			board.getFullRows = getFullRows;
+			board.clearRow = clearRow;
+			board.replaceRow = replaceRow;
+
 			board.freezePiece = freezePiece;
 			board.getGrid = getGrid;
 			board.getSquare = getSquare;
@@ -329,6 +333,34 @@
 			board.pieceCanRotate = pieceCanRotate;
 
 			board.currentPiece = board.getRandomPiece();
+
+			function clearRow (rowIndx) {
+				var fullRow = model.splice(rowIndx, 1)[0];
+
+				return fullRow.map(function (square) {
+					square.isOccuppied = false;
+					square.color = 'grey';
+					return square;
+				});
+
+				return fullRow;
+			}
+
+			function replaceRow (row) {
+				model.unshift(row);
+			}
+
+			function getFullRows () {
+				var fullRowsIndxArr = [];
+
+				model.forEach(function (row, rowIndx) {
+					if (row.every(function (square) { return square.isOccuppied; })) {
+						fullRowsIndxArr.push(rowIndx);
+					}
+				});
+
+				return fullRowsIndxArr;
+			}
 
 			function getRandomPiece () {
 				var randomShape = randomFromArr(boardConfig.gamePieceFactory.allShapes);
@@ -457,24 +489,24 @@
 			}
 
 			function renderBoard () {
-				viewConfig.model.getGrid().forEach(function (row) {
-					row.forEach(function (square) {
-						paintSquare(square.row, square.col, square.color);
+				viewConfig.model.getGrid().forEach(function (row, rowIndx) {
+					row.forEach(function (square, colIndx) {
+						paintSquare(rowIndx, colIndx, square.color);
 					});
 				});
 			}
 
-			function renderRow (row) {
-				var rowPieces = viewConfig.model.getRow(row);
-				rowPieces.forEach(function (box) {
-					paintSquare(box.row, box.col, box.color);
+			function renderRow (rowIndx) {
+				var rowPieces = viewConfig.model.getRow(rowIndx);
+				rowPieces.forEach(function (box, colIndx) {
+					paintSquare(rowIndx, colIndx, box.color);
 				});
 			}
 
-			function renderCol (col) {
-				var colPieces = viewConfig.model.getCol(col);
-				colPieces.forEach(function (box) {
-					paintSquare(box.row, box.col, box.color);
+			function renderCol (colIndx) {
+				var colPieces = viewConfig.model.getCol(colIndx);
+				colPieces.forEach(function (box, rowIndx) {// correct, checking the row of each square in column
+					paintSquare(rowIndx, colIndx, box.color);
 				});
 			}
 
@@ -497,8 +529,6 @@
 
 		function squareModelFactory (row, col) {
 			return {
-				row: row,
-				col: col,
 				isOccuppied: false,
 				color: 'grey'
 			};
@@ -532,9 +562,16 @@
 						controllerConfig.model.freezePiece(controllerConfig.model.currentPiece);
 						cyclesBlocked = 0;
 						controllerConfig.model.currentPiece = controllerConfig.model.getRandomPiece();
+
+						var fullRows = controllerConfig.model.getFullRows();
+
+						fullRows.forEach(function (rowIndx) {
+							var replacementRow = controllerConfig.model.clearRow(rowIndx);
+							controllerConfig.model.replaceRow(replacementRow);
+						});
 					}
 
-				}, 500);
+				}, 250);
 
 
 			}
@@ -599,9 +636,17 @@
 				controllerConfig.model.freezePiece(controllerConfig.model.currentPiece);
 				cyclesBlocked = 0;
 				controllerConfig.model.currentPiece = controllerConfig.model.getRandomPiece();
+
+				var fullRows = controllerConfig.model.getFullRows();
+
+				fullRows.forEach(function (rowIndx) {
+					var replacementRow = controllerConfig.model.clearRow(rowIndx);
+					controllerConfig.model.replaceRow(replacementRow);
+				});
 			}
 
 			return controller;
+
 		}
 
 		var canvas = document.getElementById('game-board');
