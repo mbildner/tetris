@@ -334,6 +334,8 @@
 
 			board.currentPiece = board.getRandomPiece();
 
+			board.currentPieceShadow = function () {return board.currentPiece};
+
 			function clearRow (rowIndx) {
 				var fullRow = model.splice(rowIndx, 1)[0];
 
@@ -618,7 +620,7 @@
 				}
 			}
 
-			function moveDown () {
+			function moveDown (piece) {
 				var ableToMove = controllerConfig.model.pieceCanMove(controllerConfig.model.currentPiece, 1, 0);
 
 				if (ableToMove) {
