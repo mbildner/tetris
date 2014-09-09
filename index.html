@@ -1,9 +1,8 @@
 <html>
 <head>
-	<title>target</title>
+	<title>tetris</title>
 </head>
 <body>
-	<!-- <div class="target"></div> -->
 	<canvas id="game-board" width="300" height="600"></canvas>
 
 	<script>
@@ -317,6 +316,8 @@
 
 			var model = boardModelFactory(boardConfig.rows, boardConfig.cols, boardConfig.squareModelFactory);
 
+			board.getCurrentPiece = getCurrentPiece;
+			board.getNextPiece = getNextPiece;
 			board.getRandomPiece = getRandomPiece;
 			board.getPiece = getPiece;
 
@@ -332,7 +333,19 @@
 			board.pieceCanMove = pieceCanMove;
 			board.pieceCanRotate = pieceCanRotate;
 
-			board.currentPiece = board.getRandomPiece();
+			var upcomingPiecesQueue = [];
+
+			function getNextPiece () {
+				return upcomingPiecesQueue[upcomingPiecesQueue.length -2];
+			}
+
+			function getCurrentPiece () {
+				while (upcomingPiecesQueue.length <= (boardConfig.upcomingPiecesShown || 1)) {
+					upcomingPiecesQueue.unshift(getRandomPiece());
+				}
+
+				return upcomingPiecesQueue[upcomingPiecesQueue.length - 1];
+			}
 
 			function clearRow (rowIndx) {
 				var fullRow = model.splice(rowIndx, 1)[0];
@@ -377,6 +390,8 @@
 					gameBoardSquare.isOccuppied = true;
 					gameBoardSquare.color = piece.color;
 				});
+
+				upcomingPiecesQueue.pop();
 			}
 
 			function pieceWouldCollide (piece, rowOffset, colOffset) {
@@ -544,7 +559,8 @@
 			function runRender () {
 				controllerConfig.view.wipeScreen();
 				controllerConfig.view.renderBoard();
-				controllerConfig.view.renderPiece(controllerConfig.model.currentPiece);
+				controllerConfig.view.renderPiece(controllerConfig.model.getCurrentPiece());
+				// console.log(controllerConfig.model.getNextPiece().shape);
 				window.requestAnimationFrame(runRender);
 			}
 
@@ -559,9 +575,8 @@
 					}
 					if (cyclesBlocked >= controllerConfig.freezePieceAfter) {
 
-						controllerConfig.model.freezePiece(controllerConfig.model.currentPiece);
+						controllerConfig.model.freezePiece(controllerConfig.model.getCurrentPiece());
 						cyclesBlocked = 0;
-						controllerConfig.model.currentPiece = controllerConfig.model.getRandomPiece();
 
 						var fullRows = controllerConfig.model.getFullRows();
 
@@ -601,28 +616,28 @@
 			}
 
 			function moveLeft () {
-				if (controllerConfig.model.pieceCanMove(controllerConfig.model.currentPiece, 0, -1)) {
-					controllerConfig.model.currentPiece.shift(-1);
+				if (controllerConfig.model.pieceCanMove(controllerConfig.model.getCurrentPiece(), 0, -1)) {
+					controllerConfig.model.getCurrentPiece().shift(-1);
 				}
 			}
 
 			function moveRight () {
-				if (controllerConfig.model.pieceCanMove(controllerConfig.model.currentPiece, 0, 1)) {
-					controllerConfig.model.currentPiece.shift(1);
+				if (controllerConfig.model.pieceCanMove(controllerConfig.model.getCurrentPiece(), 0, 1)) {
+					controllerConfig.model.getCurrentPiece().shift(1);
 				}
 			}
 
 			function rotatePiece () {
-				if (controllerConfig.model.pieceCanRotate(controllerConfig.model.currentPiece)) {
-					controllerConfig.model.currentPiece.rotate();
+				if (controllerConfig.model.pieceCanRotate(controllerConfig.model.getCurrentPiece())) {
+					controllerConfig.model.getCurrentPiece().rotate();
 				}
 			}
 
 			function moveDown () {
-				var ableToMove = controllerConfig.model.pieceCanMove(controllerConfig.model.currentPiece, 1, 0);
+				var ableToMove = controllerConfig.model.pieceCanMove(controllerConfig.model.getCurrentPiece(), 1, 0);
 
 				if (ableToMove) {
-					controllerConfig.model.currentPiece.lower();
+					controllerConfig.model.getCurrentPiece().lower();
 				}
 
 				return ableToMove;
@@ -633,9 +648,8 @@
 					// drop until can't
 				}
 
-				controllerConfig.model.freezePiece(controllerConfig.model.currentPiece);
+				controllerConfig.model.freezePiece(controllerConfig.model.getCurrentPiece());
 				cyclesBlocked = 0;
-				controllerConfig.model.currentPiece = controllerConfig.model.getRandomPiece();
 
 				var fullRows = controllerConfig.model.getFullRows();
 
@@ -650,6 +664,7 @@
 		}
 
 		var canvas = document.getElementById('game-board');
+		var nextPieceCanvas = document.getElementById('next-piece-canvas');
 
 		var gameModel = gameModelFactory({
 			rows: 20,
