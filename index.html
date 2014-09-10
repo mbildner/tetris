@@ -3,7 +3,7 @@
 	<title>tetris</title>
 </head>
 <body>
-	<canvas id="game-board" width="300" height="600"></canvas>
+	<canvas id="game-board" width="500" height="600"></canvas>
 
 	<script>
 		function flatten (nestedArr) {
@@ -246,14 +246,31 @@
 				return this.currentRotation;
 			};
 
-			piece.getRotations = function (times) {
-				// this is bad
+			function clonePiece (piece) {
 				var dummyPiece = pieceFactory(this.shape);
 				dummyPiece.coords = this.coords;
 				dummyPiece.currentRotation = this.currentRotation;
-				dummyPiece.rotate();
 				return dummyPiece;
+			}
 
+
+			piece.clone = function () {
+				var dummyPiece = pieceFactory(this.shape);
+				dummyPiece.coords = this.coords;
+				dummyPiece.currentRotation = this.currentRotation;
+				return dummyPiece;
+			}
+
+			piece.getRotations = function (times) {
+				var dummyPiece = this.clone();
+
+				if (times >= 0) {
+					while (times--) {
+						dummyPiece.rotate();
+					}
+				}
+
+				return dummyPiece;
 			};
 
 			piece.getSingleRotation = function () {
@@ -316,6 +333,8 @@
 
 			var model = boardModelFactory(boardConfig.rows, boardConfig.cols, boardConfig.squareModelFactory);
 
+			board.getUpcomingPiecesQueue = getUpcomingPiecesQueue;
+
 			board.getCurrentPiece = getCurrentPiece;
 			board.getNextPiece = getNextPiece;
 			board.getRandomPiece = getRandomPiece;
@@ -334,6 +353,11 @@
 			board.pieceCanRotate = pieceCanRotate;
 
 			var upcomingPiecesQueue = [];
+
+			function getUpcomingPiecesQueue () {
+				// includes current piece, slice in the future
+				return upcomingPiecesQueue;
+			}
 
 			function getNextPiece () {
 				return upcomingPiecesQueue[upcomingPiecesQueue.length -2];
@@ -472,7 +496,9 @@
 			var context = canvas.getContext('2d');
 
 			var height = canvas.height;
-			var width = canvas.width;
+
+			// leave room for the upcoming pieces view
+			var width = canvas.width - 200;
 
 			var rowsNumber = viewConfig.model.rows;
 
@@ -481,11 +507,29 @@
 			var rowHeight = height / rowsNumber;
 			var colWidth = width / colsNumber;
 
+			view.renderUpcomingQueue = renderUpcomingQueue;
+
 			view.renderBoard = renderBoard;
 			view.renderRow = renderRow;
 			view.renderCol = renderCol;
 			view.renderPiece = renderPiece;
 			view.wipeScreen = wipeScreen;
+
+			function renderUpcomingQueue (queue) {
+				// var safeClones = queue.map(function (piece) {
+				// 	return piece.clone();
+				// });
+
+				// safeClones.forEach(function (clone, indx) {
+				// 	clone.coords.row = (indx + 1) * 4;
+
+				// 	console.log(clone.color);
+
+
+
+				// });
+
+			}
 
 			function wipeScreen (color) {
 				var cachedFillStyle = context.fillStyle;
@@ -560,7 +604,9 @@
 				controllerConfig.view.wipeScreen();
 				controllerConfig.view.renderBoard();
 				controllerConfig.view.renderPiece(controllerConfig.model.getCurrentPiece());
-				// console.log(controllerConfig.model.getNextPiece().shape);
+
+				controllerConfig.view.renderUpcomingQueue(controllerConfig.model.getUpcomingPiecesQueue());
+
 				window.requestAnimationFrame(runRender);
 			}
 
