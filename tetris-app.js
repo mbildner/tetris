@@ -714,28 +714,3 @@
   window['tetris'] = tetris;
 
 })(window, document);
-
-
-var canvas = document.getElementById('game-board');
-var nextPieceCanvas = document.getElementById('next-piece-canvas');
-
-var gameModel = tetris.gameModelFactory({
-  rows: 20,
-  cols: 10,
-  // nextPieceQueue: 4,
-  squareModelFactory: tetris.squareModelFactory,
-  gamePieceFactory: tetris.pieceFactory
-});
-
-var gameView = tetris.viewFactory({
-  canvas: canvas,
-  model: gameModel
-});
-
-var controller = tetris.gameControllerFactory({
-  view: gameView,
-  model: gameModel,
-  freezePieceAfter: 2
-});
-
-controller.start();
