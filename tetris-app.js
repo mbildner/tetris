@@ -595,11 +595,17 @@
     var cyclesBlocked = 0;
 
     function runRender () {
-      controllerConfig.view.wipeScreen();
-      controllerConfig.view.renderBoard();
-      controllerConfig.view.renderPiece(controllerConfig.model.getCurrentPiece());
 
-      controllerConfig.view.renderUpcomingQueue(controllerConfig.model.getUpcomingPiecesQueue());
+      controllerConfig.views.forEach(function (view) {
+
+        view.wipeScreen();
+        view.renderBoard();
+        view.renderPiece(controllerConfig.model.getCurrentPiece());
+
+        view.renderUpcomingQueue(controllerConfig.model.getUpcomingPiecesQueue());
+
+      });
+
 
       window.requestAnimationFrame(runRender);
     }

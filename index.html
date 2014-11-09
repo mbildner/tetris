@@ -4,10 +4,19 @@
 	<script src="./tetris-app.js"></script>
 </head>
 <body>
-	<canvas id="game-board" width="500" height="600"></canvas>
+
+
+	<canvas width="250" height="300"></canvas>
+	<canvas width="250" height="400"></canvas>
+	<canvas width="500" height="300"></canvas>
+	<canvas width="250" height="300"></canvas>
+	<canvas width="250" height="300"></canvas>
+	<canvas width="250" height="300"></canvas>
+	<canvas width="250" height="300"></canvas>
+
+
 	<script>
-		var canvas = document.getElementById('game-board');
-		var nextPieceCanvas = document.getElementById('next-piece-canvas');
+		var canvases = [].slice.call(document.getElementsByTagName('canvas'));
 
 		var gameModel = tetris.gameModelFactory({
 		  rows: 20,
@@ -17,13 +26,15 @@
 		  gamePieceFactory: tetris.pieceFactory
 		});
 
-		var gameView = tetris.viewFactory({
-		  canvas: canvas,
-		  model: gameModel
+		var gameViews = canvases.map(function (canvas) {
+			return tetris.viewFactory({
+				canvas: canvas,
+				model: gameModel
+			});
 		});
 
 		var controller = tetris.gameControllerFactory({
-		  view: gameView,
+		  views: gameViews,
 		  model: gameModel,
 		  freezePieceAfter: 2
 		});
