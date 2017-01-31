@@ -501,29 +501,11 @@
     var rowHeight = height / rowsNumber;
     var colWidth = width / colsNumber;
 
-    view.renderUpcomingQueue = renderUpcomingQueue;
-
     view.renderBoard = renderBoard;
     view.renderRow = renderRow;
     view.renderCol = renderCol;
     view.renderPiece = renderPiece;
     view.wipeScreen = wipeScreen;
-
-    function renderUpcomingQueue (queue) {
-      // var safeClones = queue.map(function (piece) {
-      //  return piece.clone();
-      // });
-
-      // safeClones.forEach(function (clone, indx) {
-      //  clone.coords.row = (indx + 1) * 4;
-
-      //  console.log(clone.color);
-
-
-
-      // });
-
-    }
 
     function wipeScreen (color) {
       var cachedFillStyle = context.fillStyle;
@@ -621,8 +603,6 @@
       controllerConfig.view.wipeScreen();
       controllerConfig.view.renderBoard();
       controllerConfig.view.renderPiece(controllerConfig.model.getCurrentPiece());
-
-      controllerConfig.view.renderUpcomingQueue(controllerConfig.model.getUpcomingPiecesQueue());
 
       window.requestAnimationFrame(runRender);
     }
