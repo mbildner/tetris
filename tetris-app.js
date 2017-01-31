@@ -345,6 +345,10 @@
     board.getCol = getCol;
     board.pieceCanMove = pieceCanMove;
     board.pieceCanRotate = pieceCanRotate;
+    var clearedIndices = [];
+    board.getClearedRows = function(){
+      return clearedIndices;
+    }
 
     var upcomingPiecesQueue = [];
 
@@ -366,6 +370,7 @@
     }
 
     function clearRow (rowIndx) {
+      clearedIndices.push(rowIndx)
       var fullRow = model.splice(rowIndx, 1)[0];
 
       return fullRow.map(function (square) {
@@ -651,9 +656,16 @@
           });
         }
 
+        onActionTaken();
       }, 250);
 
 
+    }
+
+    function noop(){}
+
+    function onActionTaken(){
+      (controllerConfig.onActionTaken || noop)(controllerConfig.model.getGrid(), controllerConfig.model.getClearedRows())
     }
 
     function handleExternalCommand (action) {

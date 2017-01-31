@@ -25,7 +25,11 @@
 		  view: gameView,
 		  model: gameModel,
 		  freezePieceAfter: 2,
-      manualMoveOnly: false
+      manualMoveOnly: false,
+      onActionTaken: function(gameBoard, clearedRows){
+        console.log("cleared: " + clearedRows.length + " rows");
+        console.log(gameBoard)
+      }
 		});
 
 		controller.start();
