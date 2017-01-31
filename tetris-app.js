@@ -591,8 +591,29 @@
     var controller = {};
 
     controller.start = start;
+    controller.handleExternalCommand = handleExternalCommand;
 
     var cyclesBlocked = 0;
+
+    var keyCodeDict = {
+      '37': 'left',
+      '38': 'up',
+      '39': 'right',
+      '40': 'down',
+      '32': 'space'
+    };
+
+    var actionsDict = {
+      'left': moveLeft,
+      'up': rotatePiece,
+      'right': moveRight,
+      'down': moveDown,
+      'space': hardDrop
+    };
+
+    controller.ACTIONS = Object.keys(actionsDict).reduce(function(memo, key){
+      return memo[key] = key, memo;
+    }, {});
 
     function runRender () {
       controllerConfig.view.wipeScreen();
@@ -631,27 +652,17 @@
 
     }
 
-    var keyCodeDict = {
-      '37': 'left',
-      '38': 'up',
-      '39': 'right',
-      '40': 'down',
-      '32': 'space'
-    };
-
-    var actionsDict = {
-      'left': moveLeft,
-      'up': rotatePiece,
-      'right': moveRight,
-      'down': moveDown,
-      'space': hardDrop
-    };
+    function handleExternalCommand (action) {
+      if (actionsDict[action]) {
+        actionsDict[action].call(controller);
+      }
+    }
 
     function handleKeyDown (key) {
       if (keyCodeDict[key.keyCode]) {
         key.preventDefault();
-        // is binding to the controller necessary?
-        actionsDict[keyCodeDict[key.keyCode]].call(controller);
+        var action = keyCodeDict[key.keyCode];
+        handleExternalCommand(action);
       }
     }
 
