@@ -25,7 +25,8 @@
 		var controller = tetris.gameControllerFactory({
 		  view: gameView,
 		  model: gameModel,
-		  freezePieceAfter: 2
+		  freezePieceAfter: 2,
+      manualMoveOnly: false
 		});
 
 		controller.start();

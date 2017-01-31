@@ -615,6 +615,8 @@
       return memo[key] = key, memo;
     }, {});
 
+    var gameInterval = null;
+
     function runRender () {
       controllerConfig.view.wipeScreen();
       controllerConfig.view.renderBoard();
@@ -625,17 +627,39 @@
       window.requestAnimationFrame(runRender);
     }
 
+    function isGameOver (){
+      return (cyclesBlocked >= controllerConfig.freezePieceAfter) &&
+        controllerConfig.model.getCurrentPiece().coords.row == 0;
+    }
+
+    function endGameIfOver(){
+      if (!isGameOver()) return
+
+      window.clearInterval(gameInterval)
+      console.log('game is over')
+    }
+
     function start () {
       document.body.addEventListener('keydown', handleKeyDown);
       runRender();
 
       // this logic should be moved to gameModel
-      window.setInterval(function () {
-        if (!moveDown()) {
-          cyclesBlocked += 1;
-        }
-        if (cyclesBlocked >= controllerConfig.freezePieceAfter) {
+      gameInterval = window.setInterval(function () {
 
+        if (controllerConfig.manualMoveOnly) {
+          if (!canMoveDown()){
+            cyclesBlocked += 1;
+          }
+        }
+        else {
+          if (!moveDown()) {
+            cyclesBlocked += 1;
+          }
+        }
+
+        endGameIfOver();
+
+        if (cyclesBlocked >= controllerConfig.freezePieceAfter) {
           controllerConfig.model.freezePiece(controllerConfig.model.getCurrentPiece());
           cyclesBlocked = 0;
 
@@ -684,8 +708,12 @@
       }
     }
 
+    function canMoveDown(){
+      return controllerConfig.model.pieceCanMove(controllerConfig.model.getCurrentPiece(), 1, 0);
+    }
+
     function moveDown () {
-      var ableToMove = controllerConfig.model.pieceCanMove(controllerConfig.model.getCurrentPiece(), 1, 0);
+      var ableToMove = canMoveDown();
 
       if (ableToMove) {
         controllerConfig.model.getCurrentPiece().lower();
@@ -695,9 +723,16 @@
     }
 
     function hardDrop () {
-      while (moveDown()) {
-        // drop until can't
+      while (true) {
+        var wasBlocked = !moveDown();
+
+        if (wasBlocked) {
+          cyclesBlocked++;
+          break;
+        }
       }
+
+      endGameIfOver();
 
       controllerConfig.model.freezePiece(controllerConfig.model.getCurrentPiece());
       cyclesBlocked = 0;
