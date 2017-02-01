@@ -527,6 +527,12 @@
       return memo[key] = key, memo;
     }, {});
 
+    controller.attachKeyboardInput = attachKeyboardInput;
+
+    function attachKeyboardInput(){
+      document.body.addEventListener('keydown', handleKeyDown);
+    }
+
     var gameInterval = null;
 
     function runRender () {
@@ -549,8 +555,8 @@
       console.log('game is over')
     }
 
+
     function start () {
-      document.body.addEventListener('keydown', handleKeyDown);
       runRender();
 
       // this logic should be moved to gameModel
@@ -583,7 +589,6 @@
 
         onActionTaken();
       }, 250);
-
 
     }
 
