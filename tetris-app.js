@@ -1,6 +1,18 @@
 ;(function (global, document) {
   'use strict';
 
+  function flatten (nestedArr) {
+    return nestedArr.reduce(function (flatArr, arr) {
+      return flatArr.concat(arr);
+    });
+  }
+
+  function randomFromArr (arr) {
+    var max = arr.length - 1;
+    var randIndex = Math.round(Math.random() * max);
+    return arr[randIndex];
+  }
+
   function pieceFactory (shape, color) {
     var line = {};
     var block = {};
@@ -278,7 +290,7 @@
         });
       });
 
-      var objectArr = global.flatten(nestedObjectGrid);
+      var objectArr = flatten(nestedObjectGrid);
 
       var occuppiedObjectArr = objectArr.filter(function (square) {
         return square.isOccuppied;
@@ -388,7 +400,7 @@
     }
 
     function getRandomPiece () {
-      var randomShape = global.randomFromArr(boardConfig.gamePieceFactory.allShapes);
+      var randomShape = randomFromArr(boardConfig.gamePieceFactory.allShapes);
       return getPiece(randomShape);
     }
 
@@ -515,12 +527,22 @@
     controller.attachKeyboardInput = attachKeyboardInput;
 
     function attachKeyboardInput(){
-      document.body.addEventListener('keydown', handleKeyDown);
+      if (!global.document){
+        throw new Error('cannot attach keyboard listeners without a DOM document')
+      }
+
+      global.document.body.addEventListener('keydown', handleKeyDown);
     }
 
     var gameInterval = null;
 
     function runRender () {
+      if (!controllerConfig.view) {
+        // bail, there are no attached views
+        return
+      }
+
+
       controllerConfig.view.wipeScreen();
       controllerConfig.view.renderBoard();
       controllerConfig.view.renderPiece(controllerConfig.model.getCurrentPiece());
@@ -663,13 +685,12 @@
   tetris.squareModelFactory = squareModelFactory;
   tetris.pieceFactory = pieceFactory;
 
-  if (global.module && global.module.exports) {
-    global.module.exports = tetris;
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = tetris;
   } else {
+    console.log('exporting on global')
     global['tetris'] = tetris;
   }
 
-
-})(window || global, document);
-
+})(typeof window !== 'undefined' ? window : global);
 
