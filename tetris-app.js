@@ -1,6 +1,15 @@
 ;(function (global) {
-  global.flatten = flatten;
-  global.randomFromArr = randomFromArr;
+  'use strict';
+  if (global.module && global.module.exports) {
+    global.module.exports = {
+      flatten: flatten,
+      randomFromArr: randomFromArr
+    }
+  } else {
+    global.flatten = flatten;
+    global.randomFromArr = randomFromArr;
+  }
+
 
   function flatten (nestedArr) {
     return nestedArr.reduce(function (flatArr, arr) {
@@ -678,7 +687,12 @@
   tetris.squareModelFactory = squareModelFactory;
   tetris.pieceFactory = pieceFactory;
 
-  global['tetris'] = tetris;
+  if (global.module && global.module.exports) {
+    global.module.exports = tetris;
+  } else {
+    global['tetris'] = tetris;
+  }
+
 
 })(window || global, document);
 
