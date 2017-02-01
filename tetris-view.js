@@ -1,5 +1,6 @@
 ;(function (global) {
-  window.viewFactory = viewFactory;
+  'use strict';
+  global.viewFactory = viewFactory;
 
   function viewFactory (viewConfig) {
     var view = {};
