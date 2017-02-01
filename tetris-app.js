@@ -594,7 +594,6 @@
           });
         }
 
-        onActionTaken();
       }, 250);
 
     }
@@ -608,6 +607,7 @@
     function handleExternalCommand (action) {
       if (actionsDict[action]) {
         actionsDict[action].call(controller);
+        onActionTaken();
       }
     }
 
@@ -623,18 +623,21 @@
       if (controllerConfig.model.pieceCanMove(controllerConfig.model.getCurrentPiece(), 0, -1)) {
         controllerConfig.model.getCurrentPiece().shift(-1);
       }
+      onActionTaken();
     }
 
     function moveRight () {
       if (controllerConfig.model.pieceCanMove(controllerConfig.model.getCurrentPiece(), 0, 1)) {
         controllerConfig.model.getCurrentPiece().shift(1);
       }
+      onActionTaken();
     }
 
     function rotatePiece () {
       if (controllerConfig.model.pieceCanRotate(controllerConfig.model.getCurrentPiece())) {
         controllerConfig.model.getCurrentPiece().rotate();
       }
+      onActionTaken();
     }
 
     function canMoveDown(){
@@ -648,6 +651,7 @@
         controllerConfig.model.getCurrentPiece().lower();
       }
 
+      onActionTaken();
       return ableToMove;
     }
 
