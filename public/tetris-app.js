@@ -559,6 +559,8 @@
       if (!isGameOver()) return
 
       global.clearInterval(gameInterval)
+      gameInterval = null
+
       console.log('game is over')
     }
 
@@ -605,13 +607,20 @@
       (
         controllerConfig.model.getGrid(),
         controllerConfig.model.getCurrentPiece(),
-        controllerConfig.model.getClearedRows()
+        controllerConfig.model.getClearedRows(),
+        !gameInterval
       )
     }
-
+    var numStepsBetweenDrops = 4;
+    var stepsTilDrop = numStepsBetweenDrops;
     function handleExternalCommand (action) {
+      stepsTilDrop -= 1;
       if (actionsDict[action]) {
         actionsDict[action].call(controller);
+      }
+      if (stepsTilDrop == 0) {
+        stepsTilDrop = numStepsBetweenDrops;
+        moveDown();
       }
     }
 
@@ -686,12 +695,53 @@
 
   }
 
+  function board2integer (board) {
+    var boardInteger = Array(board.length);
+    for (var i = 0; i < board.length; i++)
+    {
+      boardInteger[i] = Array(board[0].length);
+      for (var j = 0; j < board[0].length; j++) {
+        if (board[i][j].isOccuppied == true) {
+          boardInteger[i][j] = 1;
+        } else {
+          boardInteger[i][j] = 0;
+        }
+      }
+    }
+    return boardInteger
+  }
+
+  function addPieceToState (piece, boardInt) {
+      var row = piece.coords.row;
+      var col = piece.coords.col;
+      piece.getGrid = function () {
+        return this.rotations[this.currentRotation];
+      };
+      var grid = grid || piece.getGrid();
+      grid.forEach(function (pieceRow, rowOffset) {
+        pieceRow.forEach(function (boxPresent, colOffset) {
+          if (boxPresent) {
+            boardInt[row+rowOffset][col+colOffset] = 1;
+          }
+        });
+      });
+    return boardInt;
+  }
+
+  function createIntState (board, piece) {
+    var boardInt = board2integer(board);
+    boardInt = addPieceToState(piece, boardInt);
+    return boardInt;
+  }
+
   var tetris = {};
 
   tetris.gameModelFactory = gameModelFactory;
   tetris.gameControllerFactory = gameControllerFactory;
   tetris.squareModelFactory = squareModelFactory;
   tetris.pieceFactory = pieceFactory;
+  tetris.createIntState = createIntState;
+
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = tetris;
