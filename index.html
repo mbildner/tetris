@@ -28,7 +28,8 @@
 		  model: gameModel,
 		  freezePieceAfter: 2,
       manualMoveOnly: false,
-      onActionTaken: function(gameBoard, currentPiece, clearedRows){
+      onActionTaken: function(gameBoard, currentPiece, clearedRows, done){
+		  	console.log('game is done: ', done)
       }
 		});
 

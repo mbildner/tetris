@@ -6,7 +6,11 @@
 <body>
 	<canvas id="game-board" width="500" height="600"></canvas>
 	<script>
-		var canvas = document.getElementById('game-board');
+	// cr
+	var gameState;
+
+
+	var canvas = document.getElementById('game-board');
 
     var STATE_URL = '/state'
 		var gameView = viewFactory({
@@ -38,6 +42,7 @@
       request.onreadystatechange = function() {
         if(request.readyState === 4) {
           if(request.status === 200) {
+			gameState = JSON.parse(request.responseText);
             callback(request.responseText)
           } else {
             callback(null)
@@ -52,7 +57,7 @@
     function asyncRenderLoop(){
       getGameState(function(state){
         renderState(state);
-        asyncRenderLoop()
+        setTimeout(asyncRenderLoop(),10);
       })
     }
 

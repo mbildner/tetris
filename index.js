@@ -44,13 +44,15 @@ function newGame(){
 
   const controller = tetris.gameControllerFactory({
     model: gameModel,
-    freezePieceAfter: 2,
+    freezePieceAfter: 1,
     manualMoveOnly: true,
-    onActionTaken: function(gameBoard, currentPiece, clearedRows){
+    onActionTaken: function(gameBoard, currentPiece, clearedRows, done){
       gameState = {
         board: gameBoard,
+        stateInt: tetris.createIntState(gameBoard, currentPiece),
         piece: currentPiece,
-        clearedRows: clearedRows
+        clearedRows: clearedRows,
+        done: done
       };
     }
   });
@@ -81,10 +83,12 @@ app.post('/restart', function(req, res){
 
 app.post('/action', function(req, res) {
   controller.handleExternalCommand(req.body.action)
+  const stateJson = JSON.stringify(gameState)
 
-  res.send(JSON.stringify(gameState))
+  console.log(gameState.done)
+
+  res.send(gameState)
 })
-
 
 app.listen(process.env.PORT || 3000, function () {
   console.log('tetris app ready to serve');
