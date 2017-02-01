@@ -607,7 +607,6 @@
     function handleExternalCommand (action) {
       if (actionsDict[action]) {
         actionsDict[action].call(controller);
-        onActionTaken();
       }
     }
 
