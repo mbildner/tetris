@@ -20,7 +20,10 @@
     function renderState (stateJSON) {
       var state = JSON.parse(stateJSON)
 
-      if (!(state && state.board && state.piece)) return
+      if (!(state && state.board && state.piece)) {
+        gameView.wipeScreen()
+        return;
+      }
 
       var board = state.board;
       var piece = state.piece;
@@ -37,7 +40,7 @@
           if(request.status === 200) {
             callback(request.responseText)
           } else {
-            console.log('error retrieving state')
+            callback(null)
           }
         }
       }
