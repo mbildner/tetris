@@ -601,7 +601,12 @@
     function noop(){}
 
     function onActionTaken(){
-      (controllerConfig.onActionTaken || noop)(controllerConfig.model.getGrid(), controllerConfig.model.getClearedRows())
+      (controllerConfig.onActionTaken || noop)
+      (
+        controllerConfig.model.getGrid(),
+        controllerConfig.model.getCurrentPiece(),
+        controllerConfig.model.getClearedRows()
+      )
     }
 
     function handleExternalCommand (action) {

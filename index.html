@@ -1,8 +1,7 @@
 <html>
 <head>
 	<title>tetris</title>
-	<script src="./tetris-app.js"></script>
-	<script src="./tetris-view.js"></script>
+	<script src="./public/tetris-view.js"></script>
 </head>
 <body>
 	<canvas id="game-board" width="500" height="600"></canvas>
@@ -22,14 +21,14 @@
 		  model: gameModel
 		});
 
+    var counter = 0;
+
 		var controller = tetris.gameControllerFactory({
 		  view: gameView,
 		  model: gameModel,
 		  freezePieceAfter: 2,
       manualMoveOnly: false,
-      onActionTaken: function(gameBoard, clearedRows){
-        console.log("cleared: " + clearedRows.length + " rows");
-        console.log(gameBoard)
+      onActionTaken: function(gameBoard, currentPiece, clearedRows){
       }
 		});
 

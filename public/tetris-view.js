@@ -42,8 +42,9 @@
       context.fillStyle = cachedFillStyle;
     }
 
-    function renderBoard () {
-      viewConfig.model.getGrid().forEach(function (row, rowIndx) {
+    function renderBoard (board) {
+      (board || viewConfig.model.getGrid())
+      .forEach(function (row, rowIndx) {
         row.forEach(function (square, colIndx) {
           paintSquare(rowIndx, colIndx, square.color);
         });
@@ -64,10 +65,10 @@
       });
     }
 
-    function renderPiece (piece) {
+    function renderPiece (piece, grid) {
       var row = piece.coords.row;
       var col = piece.coords.col;
-      var grid = piece.getGrid();
+      var grid = grid || piece.getGrid();
 
       grid.forEach(function (pieceRow, rowOffset) {
         pieceRow.forEach(function (boxPresent, colOffset) {

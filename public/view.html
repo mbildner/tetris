@@ -1,0 +1,59 @@
+<html>
+<head>
+	<title>tetris</title>
+	<script src="./tetris-view.js"></script>
+</head>
+<body>
+	<canvas id="game-board" width="500" height="600"></canvas>
+	<script>
+		var canvas = document.getElementById('game-board');
+
+    var STATE_URL = '/state'
+		var gameView = viewFactory({
+		  canvas: canvas,
+      model: {
+        rows: 20,
+        cols: 10,
+      }
+		});
+
+    function renderState (stateJSON) {
+      var state = JSON.parse(stateJSON)
+
+      if (!(state && state.board && state.piece)) return
+
+      var board = state.board;
+      var piece = state.piece;
+
+      gameView.renderBoard(board);
+      gameView.renderPiece(piece, piece.rotations[piece.currentRotation]);
+    }
+
+    function getGameState(callback){
+      var request = new XMLHttpRequest();
+
+      request.onreadystatechange = function() {
+        if(request.readyState === 4) {
+          if(request.status === 200) {
+            callback(request.responseText)
+          } else {
+            console.log('error retrieving state')
+          }
+        }
+      }
+
+      request.open('Get', STATE_URL);
+      request.send();
+    }
+
+    function asyncRenderLoop(){
+      getGameState(function(state){
+        renderState(state);
+        asyncRenderLoop()
+      })
+    }
+
+    asyncRenderLoop()
+	</script>
+</body>
+</html>
